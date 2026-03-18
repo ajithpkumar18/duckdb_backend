@@ -1,0 +1,33 @@
+# environment variables - never commit API keys
+.env
+
+# database files - too large to commit
+*.db
+*.duckdb
+*.db.wal
+
+# parquet files - too large to commit
+*.parquet
+
+# python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# jupyter
+.ipynb_checkpoints/
+# *.ipynb
+
+# temp files created by duckdb
+temp/
+
+# os files
+.DS_Store
+Thumbs.db
+
+# ide
+.vscode/
+.idea/

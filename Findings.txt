@@ -1,0 +1,71 @@
+Flagging products with nutriscore unknown or not applicable
+Sugar and nutriscore are strongly correlated in beverages — as sugar goes up, grade gets worse. This validates the dataset quality and also shows that the unknown products with 32g sugar are likely data quality issues worth flagging — we can use AI to identify and highlight incomplete or suspicious entries.
+
+Key findings from product data
+1. Missing brand/name data: 290+ products have neither brand nor name.
+Solution:
+Flag them in API response — add a data_quality field
+Use LLM to infer the product name from ingredients or categories
+Exclude them from recommendations since you can't identify them
+
+API response sample:
+# data quality score idea
+"data_quality": {
+    "has_brand": True/False,
+    "has_name": True/False,
+    "has_nutrients": True/False,
+    "has_nutriscore": True/False,
+    "completeness_score": 0.85  # % of important fields filled
+}
+
+2. Real duplicates: These are the same products in different sizes/packaging — deduplication problem.
+
+Solution:
+Build a product group table with product_group_id
+Pick the most complete record as the canonical one (most nutrients filled, has both languages etc.)
+Merge nutriment averages across variants for analytics
+
+API response sample:
+# recommendation engine idea
+# Instead of showing 7 Heinz Ketchup results
+# show ONE canonical Heinz Ketchup with variant count
+"canonical_product": {
+    "brand": "Heinz",
+    "name": "Tomato Ketchup",
+    "variants": 7,
+    "barcodes": [...],
+    "best_barcode": "0057000002992"  # most complete record
+}
+
+3. Missing brand OR name: any one is missing
+
+Solution
+**Finding 3: Has name but no brand (Miel x8)**
+
+- **Use LLM** to identify the brand from ingredients or packaging text
+- **Group by name only** when brand is missing
+- For bilingual products — `Miel` is French for `Honey`, LLM can detect language and translate
+
+
+
+Final output:
+
+**three layers:**
+```
+Layer 1 — Raw Data (what you have now)
+         ↓ barcode level, messy, duplicates, missing fields
+
+Layer 2 — Canonical Products (what you build)
+         ↓ deduplicated, grouped, quality scored
+
+Layer 3 — AI Insights (what you serve)
+         ↓ summaries, recommendations, translations
+
+Layer 4 — UI/Frontend
+
+
+Two interesting things:
+
+French name is None — Heinz Tomato Ketchup has no French name in the dataset (Ketchup aux tomates is missing). 
+Solution: Auto-translate using LLM.
+variant_count is 2 — earlier the raw query showed Heinz Ketchup had 7 barcodes, but now it shows 2. This means the other 5 barcodes had slightly different name_en values (like 'Heinz Tomato Ketchup' vs 'Tomato Ketchup') so they didn't group together.

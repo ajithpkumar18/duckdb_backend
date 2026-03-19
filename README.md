@@ -224,7 +224,3 @@ Supports English and French outputs for Canadian users.
 - Product Page Integration
 
 ---
-
-```
-
-```
